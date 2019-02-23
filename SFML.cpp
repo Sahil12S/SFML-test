@@ -9,7 +9,7 @@ class TileMap : public sf::Drawable, public sf::Transformable
 {
 public:
 
-	bool load(const std::string& tileset, sf::Vector2u tileSize, const int* tiles, unsigned int width, unsigned int height)
+	bool load(const std::string& tileset, sf::Vector2u tileSize, const vector< pair<int, int>>* tiles, unsigned int width, unsigned int height)
 	{
 		// load the tileset texture
 		if (!m_tileset.loadFromFile(tileset))
@@ -23,12 +23,13 @@ public:
 		for (unsigned int i = 0; i < width; ++i)
 			for (unsigned int j = 0; j < height; ++j)
 			{
+
 				// get the current tile number
-				int tileNumber = tiles[i + j * width];
+				pair<int, int> tileNumber = tiles[0][i + j * width];
 
 				// find its position in the tileset texture
-				int tu = tileNumber % (m_tileset.getSize().x / tileSize.x);
-				int tv = tileNumber / (m_tileset.getSize().x / tileSize.x);
+				int tu = tileNumber.first % (m_tileset.getSize().x / tileSize.x);
+				int tv = tileNumber.second % (m_tileset.getSize().x / tileSize.x);
 
 				// get a pointer to the current tile's quad
 				sf::Vertex* quad = &m_vertices[(i + j * width) * 4];
@@ -71,8 +72,13 @@ void readFile(string fileName, vector< pair<int, int>>* level, int& height, int&
 
 int main()
 {
+		const sf::Vector2f PREF_RESOLUTION = { 1280.0, 720.0 };
+
+		sf::Vector2f resolution;
+		resolution.x = sf::VideoMode::getDesktopMode().width;
+		resolution.y = sf::VideoMode::getDesktopMode().height;
 	// create the window
-	sf::RenderWindow window(sf::VideoMode(512, 256), "Tilemap");
+	sf::RenderWindow window(sf::VideoMode(resolution.x, resolution.y), "Tilemap", sf::Style::Fullscreen);
 
 	// define the level with an array of tile indices
 	/*const int level[] =
@@ -91,10 +97,17 @@ int main()
 	vector< pair<int, int>> level;
 	readFile("level.txt", &level, height, width);
 
+	//cout << level.size() << endl;
+
+	//for (pair<int, int> coords : level)
+	//{
+	//	cout << coords.first << "," << coords.second << endl;
+	//}
+
 	// create the tilemap from the level definition
 	TileMap map;
-	//if (!map.load("tileset.png", sf::Vector2u(32, 32), level, 16, 8))
-		//return -1;
+	if (!map.load("mariotileset.png", sf::Vector2u(16, 16), &level, width, height))
+		return -1;
 
 	// run the main loop
 	while (window.isOpen())
@@ -109,6 +122,13 @@ int main()
 
 		// draw the map
 		window.clear();
+
+
+		//cout << resolution.x << ", " << resolution.y << endl;
+
+		map.setScale((resolution.x / PREF_RESOLUTION.x), (resolution.y / PREF_RESOLUTION.y));
+		//map.setScale(1.5,1.5);
+
 		window.draw(map);
 		window.display();
 	}
@@ -123,20 +143,20 @@ void readFile(string fileName, vector< pair<int, int>>* level, int& height, int&
 
 	height = 0;
 
+	string num = "";
 	while (getline(inputfile, s))
 	{
-		width = 1;
-		++height;
+		width = 0;
 		string str = "";
-		for (char c : s)
+		for (int j = 0; j <= s.length(); j++)
 		{
-			if (c != '\t')
+			if (j != s.length() && s[j] != '\t')
 			{
-				str += c;
+				str += s[j];
 			}
 			else
 			{
-				string num = "";
+				num = "";
 				pair<int, int> coords;
 				for (int i = 1; i < str.length() - 1; i++)
 				{
@@ -147,15 +167,15 @@ void readFile(string fileName, vector< pair<int, int>>* level, int& height, int&
 					else
 					{
 						coords.first = stoi(num);
+						num = "";
 					}
 				}
 				coords.second = stoi(num);
 				level->emplace_back(coords);
 				++width;
+				str = "";
 			}
 		}
+		++height;
 	}
-
-	cout << "h: " << height << ", w: " << width << endl;
-
 }
