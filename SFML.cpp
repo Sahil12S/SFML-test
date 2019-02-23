@@ -54,6 +54,9 @@ private:
 
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
+		//sf::Vector2u size = target.getSize();
+		//cout << size.x << " x " << size.y << endl;
+
 		// apply the transform
 		states.transform *= getTransform();
 
@@ -116,7 +119,14 @@ int main()
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
-			if (event.type == sf::Event::Closed)
+			if (event.type == sf::Event::KeyPressed)
+			{
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+				{
+					window.close();
+				}
+			}
+			else if (event.type == sf::Event::Closed)
 				window.close();
 		}
 
@@ -128,10 +138,17 @@ int main()
 
 		map.setScale((resolution.x / PREF_RESOLUTION.x), (resolution.y / PREF_RESOLUTION.y));
 		//map.setScale(1.5,1.5);
-
+		sf::Vector2f origin = { 3000, 0 };
+		map.setOrigin(origin);
 		window.draw(map);
 		window.display();
 	}
+
+	//sf::Vector2f pos = map.getScale();
+	//cout << "origin: " << pos.x << ", " << pos.y << endl;
+
+	//float height_of_map = height * 16 * (resolution.y / PREF_RESOLUTION.y);
+	//cout << height_of_map << endl;
 
 	return 0;
 }
